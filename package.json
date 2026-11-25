@@ -1,0 +1,51 @@
+{
+  "name": "dsh-cm-core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "把 companion-memory 记忆库整个搬进 DSH 宿主：注入/摄入/检索/恢复全在一个插件里，不依赖外部 node 脚本",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "cordis",
+    "memory",
+    "companion-memory"
+  ],
+  "license": "MIT",
+  "author": "SuYouRyo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuYouRyo/dsh-cm-core.git"
+  },
+  "homepage": "https://github.com/SuYouRyo/dsh-cm-core#readme",
+  "bugs": {
+    "url": "https://github.com/SuYouRyo/dsh-cm-core/issues"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "vendor/",
+    "scripts/",
+    "tests/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node tests/plugin-core.test.mjs",
+    "snapshot": "node scripts/make-snapshot.mjs"
+  },
+  "engines": {
+    "node": ">=22.15"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": [
+        "./cordis.patch.yml"
+      ]
+    }
+  }
+}

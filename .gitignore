@@ -1,0 +1,17 @@
+# 个人记忆数据与项目快照：绝不上行
+# snapshot/ 里是真实记忆原文 + 工作区文档 + 代码 bundle，属个人数据。
+snapshot/
+
+# 依赖与运行期垃圾
+node_modules/
+*.log
+*.tgz
+
+# 改文件前的就地备份
+*.bak-*
+*.orig
+*.rej
+
+# 系统垃圾
+.DS_Store
+._*

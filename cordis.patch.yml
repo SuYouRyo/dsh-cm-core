@@ -1,0 +1,9 @@
+# dsh-cm-core bundle patch
+#
+# 只插一个宿主插件：记忆库内核（vendor/ 里是 companion-memory 的 src/ 全量副本，
+# 所以插件零外部依赖，也不需要 work/companion/companion-memory 在场就能跑）。
+#
+# ⚠️ insert 的 id 必须与包名一致（照 dsh-cm-role / dsh-sae-host 的先例）。
+- insert:
+    - id: dsh-cm-core
+      name: 'dsh-cm-core'
