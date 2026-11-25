@@ -1,6 +1,6 @@
 {
   "name": "dsh-cm-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "把 companion-memory 记忆库整个搬进 DSH 宿主：注入/摄入/检索/恢复全在一个插件里，不依赖外部 node 脚本",
   "keywords": [
