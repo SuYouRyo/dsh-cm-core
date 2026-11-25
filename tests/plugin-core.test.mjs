@@ -126,11 +126,11 @@ function makeCtx() {
     assert.equal(got.sections[0].name, mod.SECTION_NAME)
     assert.equal(got.sections[0].order, mod.SECTION_ORDER)
   })
-  check('③ 九个工具齐全', () => {
+  check('③ 十个工具齐全', () => {
     const names = got.tools.map((t) => t.name).sort()
     assert.deepEqual(names, [
-      'cm_handoff', 'cm_ingest', 'cm_know', 'cm_layers', 'cm_recall',
-      'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
+      'cm_archive', 'cm_handoff', 'cm_ingest', 'cm_know', 'cm_layers',
+      'cm_recall', 'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
     ])
   })
   check('④ 监听 session/event', () => {
@@ -144,7 +144,7 @@ function makeCtx() {
   const { ctx, got } = makeCtx()
   mod.apply(ctx, { workspace: WORKSPACE })
   check('⑮ 输出 schema 合法（required 在对象层，不在属性里）', () => {
-    assert.ok(got.tools.length === 9, '工具数应为 9')
+    assert.ok(got.tools.length === 10, '工具数应为 10')
     for (const t of got.tools) {
       const sc = t.output?.schema
       assert.ok(sc && sc.type === 'object', `${t.name} 输出 schema 缺失`)
@@ -405,7 +405,7 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
   })
 
   await checkAsync('㉘ 新工具的输出 schema 同样合法', async () => {
-    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers', 'cm_ingest']) {
+    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers', 'cm_ingest', 'cm_archive']) {
       const sc = byName(n).output?.schema
       assert.ok(sc && sc.type === 'object', `${n} 缺 schema`)
       assert.ok(Array.isArray(sc.required) && sc.required.includes('text'), `${n} required 位置不对`)
@@ -423,6 +423,25 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
       if (prev === undefined) delete process.env.DSH_SESSIONS_DIR
       else process.env.DSH_SESSIONS_DIR = prev
     }
+  })
+
+  await checkAsync('㉚ cm_archive 归档后可列出、可撤销（原文不删）', async () => {
+    const k = await byName('cm_know').execute({ text: '这条待会儿会被归档' }, exec)
+    assert.ok(String(k.text).includes('已写进原文层'))
+    const st = await byName('cm_status').execute({}, exec)
+    const before = Number((String(st.text).match(/原文层：(\d+) 条 id/) || [])[1])
+    const rows = mod.getMemory({ memDir })?.store?.query({ limit: 1, kind: ['msg', 'user'], role: 'work' }) || []
+    const target = rows[0]?.id
+    assert.ok(target, '取不到可归档的 id')
+    const a = await byName('cm_archive').execute({ ids: [target], why: '自测归档' }, exec)
+    assert.ok(String(a.text).includes('已归档 1 条'), `归档异常：${a.text}`)
+    const list = await byName('cm_archive').execute({}, exec)
+    assert.ok(String(list.text).includes(target), `列表里没有 ${target}：${list.text}`)
+    const u = await byName('cm_archive').execute({ ids: [target], undo: true }, exec)
+    assert.ok(String(u.text).includes('已撤销归档 1 条'), `撤销异常：${u.text}`)
+    const st2 = await byName('cm_status').execute({}, exec)
+    const after = Number((String(st2.text).match(/原文层：(\d+) 条 id/) || [])[1])
+    assert.equal(after, before, '归档/撤销都不该改变原文条数')
   })
 }
 
