@@ -68,7 +68,7 @@ plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-0.1
 `memDir` → `CM_DIR` → 从 `workspace` / 会话工作目录向上找 `.companion-memory`（限深 12 层，且必须真的是库）→ 都没有就**返回空、不猜路径**。
 刻意**不**兜底到 `~/.dsh/companion-memory`：那会在宿主进程 cwd（`dsh web` 是 `/root`）里凭空造出一个空库，表现为「插件装了但注入是空的」。
 
-## 三、十个工具
+## 三、十一个工具
 
 | 工具 | 作用 | 读/写 |
 |---|---|---|
@@ -82,7 +82,10 @@ plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-0.1
 | `cm_layers` | 看三层蒸馏现状：L1 事实 / L2 画像 / L3 经验各多少条、覆盖多少天 | 只读 |
 | `cm_ingest` | 把磁盘上已有的历史会话补灌进库（`~/.dsh/sessions`）。按 id 判重，可重复调用 | 写 |
 | `cm_archive` | 归档（mute）/ 撤销归档若干条记忆：不再被检索注入捞到，原文不删、按 id 仍可点名读 | 写（可逆） |
+| `cm_read` | 按 id 读完整原文；`mode=nearby` 读同会话上下文；`mode=expand` 沿同会话与词面相关追查 | 只读 |
 
+> `cm_read` 是检索的下一跳。`cm_recall` 给的是 400 字片段（够「想起」）；要**引用原话**就得按 id 取全文，要**看上下文**就用 `nearby`，**不知道还有什么相关**就用 `expand`。三者都受同一道可见范围约束。
+>
 > `cm_archive` 是「可逆的整理」。记忆库的整理红线是**不物理删除**：归档只是让一条记录不再出现在检索与注入里，原文一个字节不动，`undo:true` 可完整退回。
 >
 > `cm_ingest` 存在的理由：插件只能摄入**当前会话正在发生**的消息。恢复快照之后、或插件晚装了一段，中间那些会话不会自己进来 —— 这是插件形态相对定时守护进程丢掉的唯一能力，必须显式补回。

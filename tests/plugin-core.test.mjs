@@ -126,11 +126,11 @@ function makeCtx() {
     assert.equal(got.sections[0].name, mod.SECTION_NAME)
     assert.equal(got.sections[0].order, mod.SECTION_ORDER)
   })
-  check('③ 十个工具齐全', () => {
+  check('③ 十一个工具齐全', () => {
     const names = got.tools.map((t) => t.name).sort()
     assert.deepEqual(names, [
       'cm_archive', 'cm_handoff', 'cm_ingest', 'cm_know', 'cm_layers',
-      'cm_recall', 'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
+      'cm_read', 'cm_recall', 'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
     ])
   })
   check('④ 监听 session/event', () => {
@@ -144,7 +144,7 @@ function makeCtx() {
   const { ctx, got } = makeCtx()
   mod.apply(ctx, { workspace: WORKSPACE })
   check('⑮ 输出 schema 合法（required 在对象层，不在属性里）', () => {
-    assert.ok(got.tools.length === 10, '工具数应为 10')
+    assert.ok(got.tools.length === 11, '工具数应为 11')
     for (const t of got.tools) {
       const sc = t.output?.schema
       assert.ok(sc && sc.type === 'object', `${t.name} 输出 schema 缺失`)
@@ -405,7 +405,7 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
   })
 
   await checkAsync('㉘ 新工具的输出 schema 同样合法', async () => {
-    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers', 'cm_ingest', 'cm_archive']) {
+    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers', 'cm_ingest', 'cm_archive', 'cm_read']) {
       const sc = byName(n).output?.schema
       assert.ok(sc && sc.type === 'object', `${n} 缺 schema`)
       assert.ok(Array.isArray(sc.required) && sc.required.includes('text'), `${n} required 位置不对`)
@@ -442,6 +442,23 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
     const st2 = await byName('cm_status').execute({}, exec)
     const after = Number((String(st2.text).match(/原文层：(\d+) 条 id/) || [])[1])
     assert.equal(after, before, '归档/撤销都不该改变原文条数')
+  })
+
+  await checkAsync('㉛ cm_read 能按 id 读全文、能读上下文、能追查', async () => {
+    const k = await byName('cm_know').execute({ text: '这条用来测 cm_read 的三种模式', scope: 'shared' }, exec)
+    assert.ok(String(k.text).includes('已写进原文层'), k.text)
+    const rows = mod.getMemory({ memDir })?.store?.query({ limit: 1, kind: ['msg', 'user'], role: 'work' }) || []
+    const id = rows[0]?.id
+    assert.ok(id, '取不到 id')
+    const one = await byName('cm_read').execute({ id }, exec)
+    assert.ok(String(one.text).includes('【原文】'), one.text)
+    assert.ok(String(one.text).includes(id), '全文里应带 id')
+    const near = await byName('cm_read').execute({ id, mode: 'nearby', budget: 4 }, exec)
+    assert.ok(String(near.text).includes('【同一会话的上下文】'), near.text)
+    const exp = await byName('cm_read').execute({ id, mode: 'expand', limit: 3 }, exec)
+    assert.ok(/【追查链】|没有找到与/.test(String(exp.text)), exp.text)
+    const bad = await byName('cm_read').execute({ id: 'chat:deadbeef:99999' }, exec)
+    assert.ok(String(bad.text).includes('读不到'), bad.text)
   })
 }
 
