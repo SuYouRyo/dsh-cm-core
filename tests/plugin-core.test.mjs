@@ -126,10 +126,10 @@ function makeCtx() {
     assert.equal(got.sections[0].name, mod.SECTION_NAME)
     assert.equal(got.sections[0].order, mod.SECTION_ORDER)
   })
-  check('③ 八个工具齐全', () => {
+  check('③ 九个工具齐全', () => {
     const names = got.tools.map((t) => t.name).sort()
     assert.deepEqual(names, [
-      'cm_handoff', 'cm_know', 'cm_layers', 'cm_recall',
+      'cm_handoff', 'cm_ingest', 'cm_know', 'cm_layers', 'cm_recall',
       'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
     ])
   })
@@ -144,7 +144,7 @@ function makeCtx() {
   const { ctx, got } = makeCtx()
   mod.apply(ctx, { workspace: WORKSPACE })
   check('⑮ 输出 schema 合法（required 在对象层，不在属性里）', () => {
-    assert.ok(got.tools.length === 8, '工具数应为 8')
+    assert.ok(got.tools.length === 9, '工具数应为 9')
     for (const t of got.tools) {
       const sc = t.output?.schema
       assert.ok(sc && sc.type === 'object', `${t.name} 输出 schema 缺失`)
@@ -405,10 +405,23 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
   })
 
   await checkAsync('㉘ 新工具的输出 schema 同样合法', async () => {
-    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers']) {
+    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers', 'cm_ingest']) {
       const sc = byName(n).output?.schema
       assert.ok(sc && sc.type === 'object', `${n} 缺 schema`)
       assert.ok(Array.isArray(sc.required) && sc.required.includes('text'), `${n} required 位置不对`)
+    }
+  })
+
+  await checkAsync('㉙ cm_ingest 在空会话根上安全返回（不抛、计数为 0）', async () => {
+    const emptyRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'cm-sessions-'))
+    const prev = process.env.DSH_SESSIONS_DIR
+    process.env.DSH_SESSIONS_DIR = emptyRoot
+    try {
+      const r = await byName('cm_ingest').execute({}, exec)
+      assert.ok(String(r.text).includes('扫到 0 个会话文件'), `返回异常：${r.text}`)
+    } finally {
+      if (prev === undefined) delete process.env.DSH_SESSIONS_DIR
+      else process.env.DSH_SESSIONS_DIR = prev
     }
   })
 }

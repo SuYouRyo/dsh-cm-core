@@ -68,7 +68,7 @@ plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-0.1
 `memDir` → `CM_DIR` → 从 `workspace` / 会话工作目录向上找 `.companion-memory`（限深 12 层，且必须真的是库）→ 都没有就**返回空、不猜路径**。
 刻意**不**兜底到 `~/.dsh/companion-memory`：那会在宿主进程 cwd（`dsh web` 是 `/root`）里凭空造出一个空库，表现为「插件装了但注入是空的」。
 
-## 三、八个工具
+## 三、九个工具
 
 | 工具 | 作用 | 读/写 |
 |---|---|---|
@@ -80,7 +80,10 @@ plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-0.1
 | `cm_handoff` | 拼会话续接包（自我叙述 + 偏好/画像 + 最近原话）；`write:true` 落 `raw/handoff/` | 只读（write 时写盘） |
 | `cm_know` | 往原文层手加一条知识（你自己看到的事实） | 写 |
 | `cm_layers` | 看三层蒸馏现状：L1 事实 / L2 画像 / L3 经验各多少条、覆盖多少天 | 只读 |
+| `cm_ingest` | 把磁盘上已有的历史会话补灌进库（`~/.dsh/sessions`）。按 id 判重，可重复调用 | 写 |
 
+> `cm_ingest` 存在的理由：插件只能摄入**当前会话正在发生**的消息。恢复快照之后、或插件晚装了一段，中间那些会话不会自己进来 —— 这是插件形态相对定时守护进程丢掉的唯一能力，必须显式补回。
+>
 > 自我叙述（`cm_selfnote`）刻意**不进**注入块：每轮灌自我叙述等于反复给自己下定义。
 > 它只在 `cm_handoff` 的续接包里出现 2–3 条，且带「可能过时，可能错」的框定。
 
