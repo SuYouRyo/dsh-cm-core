@@ -126,9 +126,12 @@ function makeCtx() {
     assert.equal(got.sections[0].name, mod.SECTION_NAME)
     assert.equal(got.sections[0].order, mod.SECTION_ORDER)
   })
-  check('③ 四个工具齐全', () => {
+  check('③ 八个工具齐全', () => {
     const names = got.tools.map((t) => t.name).sort()
-    assert.deepEqual(names, ['cm_recall', 'cm_remember', 'cm_restore', 'cm_status'])
+    assert.deepEqual(names, [
+      'cm_handoff', 'cm_know', 'cm_layers', 'cm_recall',
+      'cm_remember', 'cm_restore', 'cm_selfnote', 'cm_status',
+    ])
   })
   check('④ 监听 session/event', () => {
     assert.equal(got.handlers.filter((h) => h.name === 'session/event').length, 1)
@@ -141,7 +144,7 @@ function makeCtx() {
   const { ctx, got } = makeCtx()
   mod.apply(ctx, { workspace: WORKSPACE })
   check('⑮ 输出 schema 合法（required 在对象层，不在属性里）', () => {
-    assert.ok(got.tools.length === 4, '工具数应为 4')
+    assert.ok(got.tools.length === 8, '工具数应为 8')
     for (const t of got.tools) {
       const sc = t.output?.schema
       assert.ok(sc && sc.type === 'object', `${t.name} 输出 schema 缺失`)
@@ -363,6 +366,52 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
   assert.equal(got.dir, '', `cwd=/ 时不该猜到任何目录，实得 ${got.dir}`)
   assert.equal(got.mem, true, '解析不出目录时 getMemory 必须返回 null')
 })
+
+/* ---------------- ㉔~㉗ 新工具在临时库上的实跑 ---------------- */
+{
+  const os = require('node:os')
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cm-tools-'))
+  const memDir = path.join(tmp, '.companion-memory')
+  const { ctx, got } = makeCtx()
+  mod.apply(ctx, { memDir })
+  const byName = (n) => got.tools.find((t) => t.name === n)
+  const exec = { agent: { session: { id: 'tools-test-session', header: { cwd: tmp } } } }
+
+  await checkAsync('㉔ cm_know 写入原文层后可被 cm_status 看到', async () => {
+    const r = await byName('cm_know').execute({ text: '插件工具面冒烟：这条是 cm_know 写的' }, exec)
+    assert.ok(String(r.text).includes('已写进原文层'), `返回异常：${r.text}`)
+    const st = await byName('cm_status').execute({}, exec)
+    assert.ok(/原文层：\d+ 条 id/.test(String(st.text)), `状态异常：${st.text}`)
+  })
+
+  await checkAsync('㉕ cm_selfnote 写入并列出（与普通印象分开）', async () => {
+    const w = await byName('cm_selfnote').execute({ text: '我在这个项目里负责把记忆库搬进宿主' }, exec)
+    assert.ok(String(w.text).includes('已写下自我叙述'), `写入异常：${w.text}`)
+    const l = await byName('cm_selfnote').execute({}, exec)
+    assert.ok(String(l.text).includes('自我叙述'), `列出异常：${l.text}`)
+  })
+
+  await checkAsync('㉖ cm_handoff 能产出续接包文本（空库也不抛）', async () => {
+    const r = await byName('cm_handoff').execute({}, exec)
+    assert.equal(typeof r.text, 'string')
+    assert.ok(r.text.length > 0, '续接包返回空串')
+  })
+
+  await checkAsync('㉗ cm_layers 报三层各自的条数与天数', async () => {
+    const r = await byName('cm_layers').execute({}, exec)
+    assert.ok(String(r.text).includes('L1 事实'), `缺 L1：${r.text}`)
+    assert.ok(String(r.text).includes('L2 画像'), `缺 L2：${r.text}`)
+    assert.ok(String(r.text).includes('L3 经验'), `缺 L3：${r.text}`)
+  })
+
+  await checkAsync('㉘ 新工具的输出 schema 同样合法', async () => {
+    for (const n of ['cm_selfnote', 'cm_handoff', 'cm_know', 'cm_layers']) {
+      const sc = byName(n).output?.schema
+      assert.ok(sc && sc.type === 'object', `${n} 缺 schema`)
+      assert.ok(Array.isArray(sc.required) && sc.required.includes('text'), `${n} required 位置不对`)
+    }
+  })
+}
 
 /* ---------------- 汇总 ---------------- */
 console.log(`\ndsh-cm-core 自测：${pass} 通过 / ${failures.length} 失败 / ${skipped} 跳过`)
