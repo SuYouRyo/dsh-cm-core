@@ -53,6 +53,7 @@ const COPY = ['lib', 'vendor', 'scripts', 'tests', 'cordis.patch.yml']
 /** 用 release/ 模板覆盖发布包里的同名文件 */
 const TEMPLATES = [
   ['release/README.md', 'README.md'],
+  ['release/TECHNICAL-REPORT.md', 'TECHNICAL-REPORT.md'],
   ['release/package.json', 'package.json'],
   ['release/dot.gitignore', '.gitignore'],
   ['release/LICENSE', 'LICENSE'],
@@ -146,7 +147,53 @@ if (hits.length) {
 }
 log(`   ✓ 隐私扫描通过（${files.length} 个文件，无密钥 / 无家目录绝对路径）`)
 
-// 2c. 自测（无 snapshot 时应为 15 通过 / 8 跳过）
+// 2b-2. 版本一致性闸（根因 1+4：同一个版本号写在多处，改的时候只会改他看见的）
+//   事故锚点：2026-11-25 发布 0.1.1 时两个 package.json 仍是 0.1.0，
+//   白重发一版（ad9eec0）；release/README.md 的 tarball 示例至今写着 0.1.0。
+if (!dry) {
+  const readVer = (f) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(OUT, f), 'utf8')).version || ''
+    } catch {
+      return ''
+    }
+  }
+  const localVer = readVer('package.json')
+  const listVer = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version || ''
+    } catch {
+      return ''
+    }
+  })()
+  const problems = []
+  if (!localVer) problems.push('发布包 package.json 读不到 version')
+  if (!listVer) problems.push('本地包 package.json 读不到 version')
+  if (localVer && listVer && localVer !== listVer) {
+    problems.push(`本地包 version=${listVer}，发布模板 version=${localVer} —— 两处必须相等`)
+  }
+  // README 示例里如果写死了具体版本号，必须与当前版本一致
+  const readmeText = (() => {
+    try {
+      return fs.readFileSync(path.join(OUT, 'README.md'), 'utf8')
+    } catch {
+      return ''
+    }
+  })()
+  const tgzVers = [...readmeText.matchAll(/dsh-cm-core-(\d+\.\d+\.\d+)\.tgz/g)].map((m) => m[1])
+  for (const v of tgzVers) {
+    if (localVer && v !== localVer) problems.push(`README.md 的 tarball 示例写 ${v}，当前版本 ${localVer}`)
+  }
+  if (problems.length) {
+    console.error('✗ 版本一致性闸未通过：')
+    for (const p of problems) console.error('   ' + p)
+    console.error('   修法：改对版本号；不要在示例里写死版本，用 <version> 占位。')
+    process.exit(1)
+  }
+  log(`   ✓ 版本一致性通过（${localVer}；README 无写死版本号或与之一致）`)
+}
+
+// 2c. 自测（无 snapshot 时应为 23 通过 / 8 跳过）
 if (!dry) {
   const out = sh(process.execPath, ['tests/plugin-core.test.mjs'], OUT)
   const line = out.trim().split('\n').filter(Boolean).pop() || ''

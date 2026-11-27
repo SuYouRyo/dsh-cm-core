@@ -1,5 +1,19 @@
 # dsh-cm-core
 
+> ## ⚠️ 定档（frozen）· 作者不再维护
+>
+> **本项目已停止维护。** 不接 issue、不接 PR、不做兼容性承诺。
+> 仓库保留可读，作为一份可复现的实现记录。
+>
+> 它对着 `dsh 0.2.2-rc.1` 的宿主接口写成，宿主接口变动即可能失效；
+> `vendor/` 冻结在 2026-11-26，不再跟随上游更新。
+>
+> **仍然可用**：自测 23 通过 / 0 失败 / 8 跳过（发布版），
+> 全丢恢复演练实测约 2 秒完成。可用与维护是两件事。
+>
+> 想知道它为什么这样设计、哪些地方是刻意不做的、踩过哪些坑，读
+> **[`TECHNICAL-REPORT.md`](TECHNICAL-REPORT.md)** —— 那份报告比这个 README 详细得多。
+
 把 **companion-memory 记忆库**整个搬进 [DeepSeek Harness](https://github.com/deepseek-ai) 宿主进程的一个插件里：
 **注入 / 摄入 / 检索 / 恢复** 四件事全在一个 fiber 内，不再依赖任何外部 node 脚本、定时任务或工作区改造。
 
@@ -44,7 +58,7 @@ dsh --profile <profile> plugin add github:SuYouRyo/dsh-cm-core
 
 ```bash
 plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core" })
-plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-0.1.0.tgz" })
+plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-<version>.tgz" })
 ```
 
 装完**重启宿主进程**（插件模块没有 HMR）。`dsh web` 启动要 40–50 秒才打印 URL，别以为卡死。
@@ -157,11 +171,11 @@ node scripts/make-snapshot.mjs --repo <代码仓> --mem <记忆库目录> --ws <
 node tests/plugin-core.test.mjs
 ```
 
-23 条，零依赖。依赖真实库/真实快照的那几条在**探测不到时跳过并计数**（不是假装通过）：
+31 条，零依赖。依赖真实库/真实快照的那几条在**探测不到时跳过并计数**（不是假装通过）：
 
 ```
-dsh-cm-core 自测：15 通过 / 0 失败 / 8 跳过     # 无 snapshot 的发布版
-dsh-cm-core 自测：23 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完整包
+dsh-cm-core 自测：23 通过 / 0 失败 / 8 跳过     # 无 snapshot 的发布版
+dsh-cm-core 自测：31 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完整包
 ```
 
 可用 `CM_TEST_WORKSPACE=/path/to/workspace` 指定测试用的工作区。

@@ -31,6 +31,7 @@
     "scripts/",
     "tests/",
     "cordis.patch.yml",
+    "TECHNICAL-REPORT.md",
     "README.md",
     "LICENSE"
   ],
@@ -47,5 +48,6 @@
         "./cordis.patch.yml"
       ]
     }
-  }
+  },
+  "deprecated": "本项目已定档，作者不再维护。详见 TECHNICAL-REPORT.md"
 }
