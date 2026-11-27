@@ -54,6 +54,8 @@ const COPY = ['lib', 'vendor', 'scripts', 'tests', 'cordis.patch.yml']
 const TEMPLATES = [
   ['release/README.md', 'README.md'],
   ['release/TECHNICAL-REPORT.md', 'TECHNICAL-REPORT.md'],
+  ['release/SHOWCASE.md', 'SHOWCASE.md'],
+  ['release/showcase.html', 'showcase.html'],
   ['release/package.json', 'package.json'],
   ['release/dot.gitignore', '.gitignore'],
   ['release/LICENSE', 'LICENSE'],

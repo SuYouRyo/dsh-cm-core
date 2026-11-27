@@ -11,6 +11,8 @@
 > **仍然可用**：自测 23 通过 / 0 失败 / 8 跳过（发布版），
 > 全丢恢复演练实测约 2 秒完成。可用与维护是两件事。
 >
+> 想快速看「它能做什么 / 和市面上的差异」，读 **[`SHOWCASE.md`](SHOWCASE.md)**
+> （或直接打开 **[`showcase.html`](showcase.html)**，单文件、离线可看）。
 > 想知道它为什么这样设计、哪些地方是刻意不做的、踩过哪些坑，读
 > **[`TECHNICAL-REPORT.md`](TECHNICAL-REPORT.md)** —— 那份报告比这个 README 详细得多。
 
@@ -191,3 +193,11 @@ dsh-cm-core 自测：31 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完�
 ## 九、许可
 
 MIT，见 [LICENSE](LICENSE)。
+
+## 十、相关文档
+
+| 文档 | 讲什么 | 什么时候读 |
+|---|---|---|
+| [`SHOWCASE.md`](SHOWCASE.md) | 一页纸：能做什么、做了什么、和市面上有什么不同 | 想知道「这东西值不值得看」 |
+| [`showcase.html`](showcase.html) | 上面那份的可视化单页（自包含，浏览器直接打开） | 想看得舒服一点 |
+| [`TECHNICAL-REPORT.md`](TECHNICAL-REPORT.md) | 原理 / 结构 / 实现 / 取舍 / 踩坑 / 引用文献，九个章节 + 四个附录 | 想照着复现或改它 |

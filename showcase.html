@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>dsh-cm-core · 它能做什么 / 做了什么 / 和别人的不同</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#151b23; --panel2:#1b222c; --line:#2a3342;
+    --fg:#e6edf3; --dim:#9aa7b8; --dim2:#6b7889;
+    --accent:#58a6ff; --green:#3fb950; --purple:#a371f7; --amber:#d29922; --red:#f85149;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:
+      radial-gradient(900px 500px at 15% -5%, rgba(88,166,255,.13), transparent 60%),
+      radial-gradient(800px 500px at 90% 0%, rgba(163,113,247,.11), transparent 60%),
+      var(--bg);
+    color:var(--fg);font-family:var(--sans);line-height:1.72;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1060px;margin:0 auto;padding:56px 28px 96px}
+  /* ---------- header ---------- */
+  header{margin-bottom:44px}
+  .kicker{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+  .chip{
+    font-size:12px;letter-spacing:.02em;padding:4px 11px;border-radius:999px;
+    border:1px solid var(--line);background:var(--panel);color:var(--dim);
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .chip b{color:var(--fg);font-weight:600}
+  .chip.g{border-color:rgba(63,185,80,.35);color:#7ee787;background:rgba(63,185,80,.09)}
+  .chip.b{border-color:rgba(88,166,255,.35);color:#79c0ff;background:rgba(88,166,255,.09)}
+  .chip.p{border-color:rgba(163,113,247,.35);color:#c9a3ff;background:rgba(163,113,247,.09)}
+  h1{font-size:clamp(30px,4.4vw,46px);line-height:1.18;margin:0 0 14px;letter-spacing:-.02em;font-weight:700}
+  h1 .grad{background:linear-gradient(96deg,#58a6ff,#a371f7 55%,#3fb950);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--dim);font-size:17px;max-width:74ch;margin:0}
+  .lede strong{color:var(--fg)}
+  /* ---------- sections ---------- */
+  section{margin:56px 0 0}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;padding-bottom:0}
+  .sec-num{
+    font-family:var(--mono);font-size:13px;color:var(--dim2);
+    border:1px solid var(--line);border-radius:6px;padding:1px 7px;transform:translateY(-3px)
+  }
+  h2{font-size:24px;margin:0;letter-spacing:-.015em;font-weight:650}
+  .sub{color:var(--dim);font-size:14.5px;margin:6px 0 22px;max-width:78ch}
+  /* ---------- cards & grids ---------- */
+  .grid{display:grid;gap:14px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+  }
+  .card .k{font-size:12px;color:var(--dim2);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+  .card .v{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em;color:var(--fg)}
+  .card .v small{font-size:14px;color:var(--dim);font-weight:400;margin-left:4px}
+  .card .n{font-size:13px;color:var(--dim);margin-top:4px}
+  .card.b .v{color:#79c0ff}
+  .card.g .v{color:#7ee787}
+  .card.p .v{color:#c9a3ff}
+  .card.a .v{color:#e3b341}
+  /* ---------- table ---------- */
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:560px}
+  th,td{padding:11px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#11161d;color:var(--dim);font-weight:600;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  td code,p code,li code{font-family:var(--mono);font-size:.9em;background:rgba(110,118,129,.16);padding:1px 5px;border-radius:5px;color:#e6edf3}
+  .yes{color:#7ee787;font-weight:600}
+  .no{color:#f85149;font-weight:600}
+  .mid{color:#e3b341;font-weight:600}
+  /* ---------- flow ---------- */
+  .flow{
+    display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;
+    border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)
+  }
+  .flow .col{padding:20px 22px}
+  .flow .col h4{margin:0 0 12px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim2);font-weight:600}
+  .flow .mid-col{
+    display:flex;align-items:center;justify-content:center;padding:0 10px;
+    background:repeating-linear-gradient(90deg,transparent,transparent 5px,rgba(88,166,255,.12) 5px,rgba(88,166,255,.12) 6px);
+    color:var(--accent);font-family:var(--mono);font-size:20px
+  }
+  .flow ol,.flow ul{margin:0;padding-left:20px}
+  .flow li{margin:5px 0;font-size:14px;color:var(--dim)}
+  .flow li b{color:var(--fg);font-weight:600}
+  /* ---------- pipeline ---------- */
+  .pipe{display:grid;gap:10px}
+  .step{
+    display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px
+  }
+  .step .idx{
+    width:26px;height:26px;border-radius:7px;display:grid;place-items:center;
+    font-family:var(--mono);font-size:13px;background:rgba(88,166,255,.14);
+    color:#79c0ff;border:1px solid rgba(88,166,255,.3)
+  }
+  .step h5{margin:0 0 3px;font-size:15px;font-weight:620}
+  .step p{margin:0;font-size:13.5px;color:var(--dim)}
+  /* ---------- callout ---------- */
+  .note{
+    border-left:3px solid var(--accent);background:rgba(88,166,255,.07);
+    border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:14.5px;color:var(--dim)
+  }
+  .note b{color:var(--fg)}
+  .note.warn{border-left-color:var(--amber);background:rgba(210,153,34,.08)}
+  .note.quote{border-left-color:var(--purple);background:rgba(163,113,247,.08)}
+  .note p{margin:7px 0}
+  .note p:first-child{margin-top:0}
+  .note p:last-child{margin-bottom:0}
+  /* ---------- bars ---------- */
+  .bars{display:grid;gap:14px}
+  .bar-row{display:grid;grid-template-columns:150px 1fr 66px;gap:14px;align-items:center;font-size:13.5px}
+  .bar-row .lbl{color:var(--dim)}
+  .bar{height:9px;border-radius:99px;background:#1f2732;overflow:hidden}
+  .bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#58a6ff,#a371f7)}
+  .bar-row .num{font-family:var(--mono);text-align:right;color:var(--fg);font-size:13px}
+  /* ---------- divider ---------- */
+  .hr{height:1px;background:linear-gradient(90deg,transparent,var(--line) 20%,var(--line) 80%,transparent);margin:52px 0 0}
+  footer{margin-top:56px;color:var(--dim2);font-size:13px;line-height:1.8}
+  footer b{color:var(--dim)}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(88,166,255,.3)}
+  a:hover{border-bottom-color:var(--accent)}
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--dim);margin-right:6px}
+  @media(max-width:760px){
+    .flow{grid-template-columns:1fr}
+    .flow .mid-col{padding:8px 0;transform:rotate(90deg)}
+    .bar-row{grid-template-columns:110px 1fr 58px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">
+    <span class="chip g">● 定档 frozen</span>
+    <span class="chip b"><b>MIT</b> 许可</span>
+    <span class="chip"><b>0</b> 运行时依赖</span>
+    <span class="chip p"><b>11</b> 个工具</span>
+    <span class="chip"><b>23</b> 通过 / 8 跳过</span>
+    <span class="chip a">全丢恢复 <b>~2s</b></span>
+  </div>
+  <h1>把一个外挂脚本的记忆库<br>收进宿主进程的<span class="grad">一个插件</span>里</h1>
+  <p class="lede">
+    注入、摄入、检索、恢复四件事共用一个生命周期。<strong>数据全面丢失时，只靠这一个插件就能把项目恢复回来</strong>
+    —— 这是它的验收标准，不是它的宣传语。
+  </p>
+</header>
+
+<!-- ============ 1 ============ -->
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>它能做什么</h2></div>
+  <p class="sub">四件事原来各挂各的，失效点互相不知道。这张表是旧形态的真实失效面 —— 注意最后一列：<b>全是「看起来正常」的样子</b>。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>职责</th><th>旧做法</th><th>失效时你看到的样子</th></tr></thead>
+      <tbody>
+        <tr><td>注入</td><td><code>cm-agents.js</code> 改写 <code>AGENTS.md</code> 的标记段</td><td>宿主只在首个请求加载它；切到生活侧，工作侧口径照样灌进去</td></tr>
+        <tr><td>摄入</td><td><code>cm-watch.js</code> 定时扫会话文件</td><td>守护进程没拉起 → <span class="no">一条都不进</span>，且不报错</td></tr>
+        <tr><td>检索</td><td>人手动敲 <code>cm recall</code></td><td>模型根本不知道有记忆库</td></tr>
+        <tr><td>恢复</td><td>无</td><td>丢一次就没了</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="height:22px"></div>
+
+  <div class="flow">
+    <div class="col">
+      <h4>装之前 · 五个独立零件</h4>
+      <ul>
+        <li><b>cm-watch</b> 扫会话 → 灌库</li>
+        <li><b>cm-agents</b> 改写 AGENTS.md</li>
+        <li>人手动敲 <b>cm recall</b></li>
+        <li>无恢复手段</li>
+        <li>任一环没拉起 → 静默失效</li>
+      </ul>
+    </div>
+    <div class="mid-col">→</div>
+    <div class="col">
+      <h4>装之后 · 一个 fiber</h4>
+      <ul>
+        <li>宿主每轮<b>自己注入</b>（按会话角色渲染）</li>
+        <li>消息事件<b>自己入库</b></li>
+        <li>agent <b>自己调 11 个工具</b></li>
+        <li><b>cm_restore</b> 一次恢复四层</li>
+        <li>自带原料：快照打在包内</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="height:22px"></div>
+
+  <div class="grid g3">
+    <div class="card"><div class="k">注入（自动）</div><div class="v" style="font-size:16px;line-height:1.5">系统提示里的一段</div><div class="n">印象层 + 最近说过的话；<b>按会话角色与会话目录动态渲染</b>，不是静态文件</div></div>
+    <div class="card"><div class="k">摄入（自动）</div><div class="v" style="font-size:16px;line-height:1.5">事件驱动写原文</div><div class="n">复用库内核 <code>flatten</code> 判据，不重写一套</div></div>
+    <div class="card"><div class="k">检索</div><div class="v" style="font-size:16px;line-height:1.5">词面 + 向量混合</div><div class="n">bigram 倒排 + bge-m3 1024 维 → 精排 → MMR → 装包</div></div>
+  </div>
+
+  <div style="height:14px"></div>
+  <div class="grid g3">
+    <div class="card"><div class="k">精读</div><div class="v" style="font-size:16px;line-height:1.5">按 id 定点</div><div class="n">全文 / 同会话上下文 / 词面追查链</div></div>
+    <div class="card"><div class="k">整理</div><div class="v" style="font-size:16px;line-height:1.5">归档 ≠ 删除</div><div class="n">原文一个字节不动，<code>undo</code> 可完整退回</div></div>
+    <div class="card"><div class="k">恢复</div><div class="v" style="font-size:16px;line-height:1.5">四层原料</div><div class="n">文档 / 代码 / 未提交改动 / 记忆数据</div></div>
+  </div>
+
+  <div class="note">
+    <p><b>刻意不做的一半</b>（不做 ≠ 没写完）：自省（需外发模型加工，留 CLI）、gc/物理删除（不可逆，不交给模型）、批量导入（一次性运维）、多设备同步（独立插件承担）、快照自动重打（挂提交钩子会让每次 commit 背 3 秒副作用，只做检测不做自动重打，是取舍）。</p>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 2 ============ -->
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>它做了什么</h2></div>
+  <p class="sub">不是设计目标，是这台机器上量出来的数。</p>
+
+  <div class="grid g3">
+    <div class="card b"><div class="k">原文层</div><div class="v">22 634<small>条 id</small></div><div class="n">29.7 MiB · 按月分片 · 只追加</div></div>
+    <div class="card g"><div class="k">印象层</div><div class="v">226<small>条</small></div><div class="n">live 168 · archived 58 · pinned 22</div></div>
+    <div class="card p"><div class="k">向量索引</div><div class="v">18 138<small>条</small></div><div class="n">BAAI/bge-m3 · 1024 维</div></div>
+  </div>
+
+  <div style="height:16px"></div>
+
+  <div class="card">
+    <div class="k" style="margin-bottom:14px">印象来源分布 · 226 条</div>
+    <div class="bars">
+      <div class="bar-row"><span class="lbl">user_said（他说的）</span><span class="bar"><span style="width:100%"></span></span><span class="num">122</span></div>
+      <div class="bar-row"><span class="lbl">imagined（AI 想的）</span><span class="bar"><span style="width:62%"></span></span><span class="num">76</span></div>
+      <div class="bar-row"><span class="lbl">inferred（推断的）</span><span class="bar"><span style="width:22%"></span></span><span class="num">27</span></div>
+      <div class="bar-row"><span class="lbl">told（被告知的）</span><span class="bar"><span style="width:1%"></span></span><span class="num">1</span></div>
+    </div>
+    <div class="note quote" style="margin-bottom:0">
+      <p>为什么要分来源：记忆里标 <code>user_said</code> 的才能说「你跟我说过」；标 <code>inferred</code> 的最多只能说「我记得你最近在忙那个」。<b>把猜测说成陈述，是这类系统最伤人的一种错。</b></p>
+    </div>
+  </div>
+
+  <div style="height:22px"></div>
+
+  <div class="sec-head" style="margin-bottom:14px"><h2 style="font-size:19px">恢复演练 —— 项目的验收标准</h2></div>
+  <p class="sub" style="margin-bottom:16px">只留 5 个东西（<code>package.json</code> / <code>cordis.patch.yml</code> / <code>lib</code> / <code>vendor</code> / <code>snapshot</code>），其余全部删掉。</p>
+
+  <div class="pipe">
+    <div class="step"><div class="idx">01</div><div><h5>治理文档层 · 444 条</h5><p>工单 / 红线 / 知识库 / 交接 + 门禁脚本 + 根 <code>.md</code> 白名单。tar 打包以保留软链关系，解包后链接照样可解析。</p></div></div>
+    <div class="step"><div class="idx">02</div><div><h5>代码仓 · HEAD 4d4dd78a + 未提交补丁</h5><p><code>git bundle</code> 只打已提交内容。少这一层，恢复出的代码会<b>悄悄</b>退回修复前的行为 —— 报告全是 ✓，但行为是旧的。</p></div></div>
+    <div class="step"><div class="idx">03</div><div><h5>记忆数据 · 12 个文件 / 30.8 MB</h5><p>原文层 + 印象层 + 会话落定表 + 墓碑 + 移交标记。校验<b>解压后</b> sha256，任一不符则一条都不写。</p></div></div>
+    <div class="step"><div class="idx">04</div><div><h5>重建倒排索引 · 20 478 条 id</h5><p>索引是派生物，不随快照走；恢复后现算。随后工作区自己跑门禁。</p></div></div>
+  </div>
+
+  <div class="grid g3" style="margin-top:16px">
+    <div class="card a"><div class="k">总耗时</div><div class="v">1.9 – 3.0<small>秒</small></div><div class="n">多次演练区间</div></div>
+    <div class="card g"><div class="k">恢复后自检</div><div class="v">exit 0</div><div class="n">doc-gate-root / doc-gate-status</div></div>
+    <div class="card b"><div class="k">恢复后可用</div><div class="v">11<small>工具</small></div><div class="n">注入 ~575 字符 · recall 命中真实记忆</div></div>
+  </div>
+
+  <div style="height:22px"></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>部分</th><th style="width:120px">行数</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><code>lib/</code></td><td><b>1 216</b></td><td>插件本体：入口 + 库目录解析 + 恢复</td></tr>
+        <tr><td><code>scripts/</code></td><td><b>507</b></td><td>快照生成 + 发布流水线</td></tr>
+        <tr><td><code>tests/</code></td><td><b>468</b></td><td>零依赖自测 31 条</td></tr>
+        <tr><td><code>vendor/</code></td><td><b>14 834</b></td><td>记忆库内核全量副本，45 个文件</td></tr>
+        <tr><td><b>运行时第三方依赖</b></td><td><span class="yes">0</span></td><td>自包含是「全丢可恢复」的前提条件，不是优化项</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p>自测两种口径，<b>跳过就计数，不假装通过</b>：</p>
+    <p><code>无 snapshot 的发布版：23 通过 / 0 失败 / 8 跳过</code><br>
+       <code>带 snapshot 的完整包：31 通过 / 0 失败 / 0 跳过</code></p>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 3 ============ -->
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>和市面上有什么不同</h2></div>
+  <p class="sub">先摆清楚比较对象。市面上叫「记忆」的分两类，混着比会得出错误结论。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>维度</th><th>主流做法<br><span style="font-weight:400;text-transform:none">Mem0 / Zep / MemOS / Letta</span></th><th>本项目</th></tr></thead>
+      <tbody>
+        <tr><td><b>目标</b></td><td>任务记忆：记「这个项目的约定」「上次那个 bug」</td><td><b>关系记忆</b>：记住的是<b>一个人</b>，不是一份文档</td></tr>
+        <tr><td><b>存储形态</b></td><td>抽取式：提炼成 fact / 图节点，原文往往不留</td><td><b>原文即真源</b>：全存、只追加；印象是附加层，不当替代品</td></tr>
+        <tr><td><b>基础设施</b></td><td>常需向量库 / 图库 / 容器</td><td><b>零服务零依赖</b>：纯 JS + 文件（JSONL / Float32Array）</td></tr>
+        <tr><td><b>失败模式</b></td><td>召回率不够 —— <span class="mid">想不起来</span></td><td><b>说了不该说的话</b> —— <span class="no">越界、把私下的事带出去、把猜测说成「你说过」</span></td></tr>
+        <tr><td><b>可见范围</b></td><td>一套权限或不过滤</td><td><b>单向门</b>：工作侧永远看不见生活侧，库内核三处同时保证</td></tr>
+        <tr><td><b>注入</b></td><td>SDK 调用，agent 得自己记得调</td><td><b>宿主每轮自动渲染</b>，口径随会话变</td></tr>
+        <tr><td><b>灾后</b></td><td>靠备份 / 云</td><td><b>插件自带原料</b>，<code>cm_restore</code> 一次到位</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="height:24px"></div>
+
+  <div class="sec-head" style="margin-bottom:14px"><h2 style="font-size:19px">最关键的一条：原文 vs 提炼</h2></div>
+  <p class="sub">这不是口味问题，有外部证据。<b>以下为 HIVE 基准的自述结论，本项目未独立复现。</b></p>
+
+  <div class="grid g3">
+    <div class="card"><div class="k">引文可定位性</div><div class="v" style="font-size:15px;line-height:1.55">98–100% vs <span class="no">0%</span></div><div class="n">抽取式三家在<b>自家材料内</b> 98–100% 可定位，在<b>原语料内 0%</b>；原文路线两栏都 ≈100%</div></div>
+    <div class="card"><div class="k">压缩的方向性偏差</div><div class="v" style="font-size:15px;line-height:1.55">9/9 vs <span class="no">0–1/9</span></div><div class="n">压缩丢的是<b>与提问词面不重叠的那一侧</b>，不是随机信息</div></div>
+    <div class="card"><div class="k">写入成本</div><div class="v" style="font-size:15px;line-height:1.55">跨 4 个量级</div><div class="n">与效果无关 —— 别为省存储牺牲原文</div></div>
+  </div>
+
+  <div class="note quote">
+    <p>本项目自己的实测（<b>714 题基准，本地实跑</b>）：全存原文 <b>83.5%</b>，高于提炼类方案。</p>
+    <p>所以这不是「我们更聪明」，而是「<b>在这个场景里，原文就是最便宜也最可靠的表征</b>」。</p>
+  </div>
+
+  <div style="height:22px"></div>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>项目</th><th style="width:170px">关系</th><th>差异</th></tr></thead>
+      <tbody>
+        <tr><td><code>qq-dsh-bridge</code><br><span style="color:var(--dim2);font-size:12.5px">NoMindSama · MIT</span></td><td><b>设计源头</b></td><td>提供四层结构 + L4 自我认知；本项目把它从「一套脚本」变成「一个宿主插件」，并补上单向门与恢复</td></tr>
+        <tr><td><code>dsh-memu-memory</code></td><td>同生态插件</td><td>面向长篇 RP；本项目面向单人陪伴 + 工作侧隔离</td></tr>
+        <tr><td><code>dsh-fish</code> / 灵枢</td><td><b>上游算法</b></td><td>IDF 公式与装包估算器逐字移植，报告 §8.1 逐条标注</td></tr>
+        <tr><td><code>Memobase</code></td><td>目标最接近</td><td>Python 服务 + 云 embedding；本项目要求零服务、纯本地</td></tr>
+        <tr><td><code>BAAI/BioCore</code><br><code>astrbot_plugin_biocore</code></td><td><b>只看思路</b><br><span style="color:var(--dim2);font-size:12.5px">AGPL-3.0</span></td><td>MMR 与情绪层四思路；<b>未引依赖、未复制代码</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <p><b>独有的一件事：插件自带恢复原料。</b>大多数记忆方案能回答「怎么记、怎么取」。能回答「服务器没了怎么办」的不多，而<b>把恢复原料打进插件自己包里</b>的，我没在同类项目里见过。</p>
+  </div>
+</section>
+
+<div class="hr"></div>
+
+<!-- ============ 4 ============ -->
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>它的代价</h2></div>
+  <p class="sub">诚实列出来，免得有人选错。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th style="width:170px">限制</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>定档</b></td><td>作者不再维护，不接 issue / PR，不做兼容承诺；对着 <code>dsh 0.2.2-rc.1</code> 写成，宿主接口一变就可能失效</td></tr>
+        <tr><td><b>vendor 冻结</b></td><td>45 个模块是 2026-11-26 那一刻内核的全量副本，不跟随上游更新</td></tr>
+        <tr><td><b>不含快照</b></td><td>公开仓不带 <code>snapshot/</code>（含真实个人记忆原文），得自己在自己机器上生成</td></tr>
+        <tr><td><b>单机</b></td><td>多设备同步仍在独立插件里，没合并进来</td></tr>
+        <tr><td><b>中文优先</b></td><td>词面通道是中文 2 字 bigram 倒排；其他语种主要靠向量通道</td></tr>
+        <tr><td><b>向量需自备额度</b></td><td>默认关闭；开启要 embedding API（默认 <code>BAAI/bge-m3</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note quote" style="margin-top:26px">
+    <p style="font-size:16px">市面上多数「记忆」在解决 <b>记不住</b>。</p>
+    <p style="font-size:16px">这个项目在解决 <b>记太随便、提太随便</b>，以及 <b>记的东西丢了救不回来</b>。</p>
+  </div>
+</section>
+
+<footer>
+  <span class="pill">v0.1.3 定档</span><span class="pill">MIT</span><span class="pill">2026-11</span><br>
+  本页所有数字来自 2026-11-26 / 11-27 在本机的实测输出；外部项目结论标注了「自述」。<br>
+  实现细节见 <b>TECHNICAL-REPORT.md</b>，安装见 <b>README.md</b>。
+</footer>
+
+</div>
+</body>
+</html>
