@@ -537,7 +537,7 @@ dsh-cm-core 自测：31 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完�
 
 | 上游 | 许可 | 用在哪 | 程度 |
 |---|---|---|---|
-| [`NoMindSama/qq-dsh-bridge`](https://github.com/NoMindSama/qq-dsh-bridge) | MIT（© 2026 Derpyu520 及贡献者） | `vendor/store.js`、`vendor/search.js`、`vendor/impressions.js` | 改自（原文层/倒排/打分骨架） |
+| [`NoMindSama/qq-dsh-bridge`](https://github.com/NoMindSama/qq-dsh-bridge) | MIT（© 2026 Derpyu520 及贡献者） | `vendor/store.js`、`vendor/search.js`、`vendor/impressions.js`；L4 自我认知层的设计依据（README「前三层记的都是你，第四层记的是它」） | 改自（原文层/倒排/打分骨架）+ 设计借鉴 |
 | `qq-bridge-memory` 7ge233 | MIT（© 7ge233） | `vendor/rank.js` | 逻辑移植（排序、门控、时间语义），只用纯 JS 小数函数重写，不搬 numpy/ORM |
 | [`ssamurias/dsh-fish`](https://github.com/ssamurias/dsh-fish) | MIT | `vendor/idf.js`（`lib/recall.js:205-213`）、`vendor/bm25.js`（`[floor,ceil]`） | **逐字移植公式**；上下界标 0.6/1.0 标注"未在本地标定" |
 | [`FuRongJun-1999/dsh-memory`](https://github.com/FuRongJun-1999/dsh-memory)（灵枢 LINGSHU） | MIT（© 2026 FuRongJun-1999） | `vendor/pack.js` | **逐字等价移植**确定性估算器与装包循环 |
@@ -545,7 +545,6 @@ dsh-cm-core 自测：31 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完�
 | `Johnhmzm/astrbot_plugin_biocore` | AGPL-3.0 | `vendor/emotion.js`（状态确定性/闭环回流/coping 滑动平均/意图选择器） | **只抽思路**；不引依赖、不复制代码 |
 | `qwen-rag`（`app/rerank.py`） | — | `vendor/rerank.js` | 思路照搬（池子全送、截断交调用方、门限只卡第一名）；门限自己标定 |
 | 洛灯鱼《陪伴型个人 agent 的真长期记忆系统》（小黑盒，2026-10-27，**非开源**） | — | `vendor/close-channel.js`、`vendor/workingset.js` | 上游参考（原文投喂形态、注入拼接顺序、TTL 语义） |
-| `NoMindSama/qq-dsh-bridge` | — | L4 自我认知层设计 | 设计依据：README「前三层记的都是你，第四层记的是它」 |
 
 **许可边界声明**：`vendor/` 里所有 AGPL-3.0 上游（BioCore、astrbot_plugin_biocore）
 **均未引入依赖、未复制代码**，只借鉴思路；涉及处逐条在文件头注明。
