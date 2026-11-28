@@ -33,8 +33,9 @@ const require = createRequire(import.meta.url)
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const HERE = path.dirname(new URL(import.meta.url).pathname)
+const HERE = path.dirname(fileURLToPath(import.meta.url))
 const PACKAGE_ROOT = path.resolve(HERE, '..')
 
 const mod = await import('../lib/index.js')
@@ -358,10 +359,10 @@ check('⑲ 解析不出可信目录就返回空串，不猜 ~/.dsh 兜底', () =
   // 用子进程把 cwd 设成一个**没有 .companion-memory 的父链**，才测得到真实契约：
   // 无显式来源 → 返回 ''（而不是 ~/.dsh/companion-memory 那种猜出来的路径）。
   const { execFileSync } = require('node:child_process')
-  const script = `import('${PACKAGE_ROOT}/lib/memory.js').then(m => {
+  const script = `import(${JSON.stringify(require('node:url').pathToFileURL(PACKAGE_ROOT + '/lib/memory.js').href)}).then(m => {
     process.stdout.write(JSON.stringify({ dir: m.resolveMemDir({}), mem: m.getMemory({}) === null }))
   })`
-  const out = execFileSync(process.execPath, ['-e', script], { cwd: '/', encoding: 'utf8' })
+  const out = execFileSync(process.execPath, ['-e', script], { cwd: path.parse(process.cwd()).root, encoding: 'utf8' })
   const got = JSON.parse(out)
   assert.equal(got.dir, '', `cwd=/ 时不该猜到任何目录，实得 ${got.dir}`)
   assert.equal(got.mem, true, '解析不出目录时 getMemory 必须返回 null')
