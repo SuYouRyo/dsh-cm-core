@@ -65,6 +65,81 @@ plugin_manager({ action: "install_bundle", target: "/abs/path/to/dsh-cm-core-<ve
 
 装完**重启宿主进程**（插件模块没有 HMR）。`dsh web` 启动要 40–50 秒才打印 URL，别以为卡死。
 
+### 电脑上怎么装（Windows 实测流程）
+
+上面那句 `plugin_manager(...)` 是把包放进 profile，**不等于能用了**：插件要能读到你的记忆库，还必须在 Windows 上不踩下面第八节那几条坑。以下是 2026-11-28 在一台 Windows 11 + DSH desktop `0.2.1-rc.5` 上从零走通的完整顺序。
+
+**① 前置：两样东西必须先在**
+
+| 依赖 | 要求 | 怎么确认 |
+|---|---|---|
+| Node.js | `>= 22.15`（本包 `engines` 卡的就是这个；插件用了 `require()` 加载 ESM，22.12 以下直接不可用） | 跑 `node -v`。PATH 里没有也不要紧，DSH runtime 自带一份，用绝对路径调 |
+| git | **Windows 版 git 或 PortableGit**，且 `git.exe` 可被找到 | 跑 `git --version`。装 Git for Windows 时选「Git from the command line」才会进 PATH |
+| 记忆库 | 工作区里得**已经存在** `<工作区>/.companion-memory/` | 见 §二 的库目录解析规则：找不到就返回空、**不猜路径** |
+
+第三条最容易翻车：插件不会替你造库。新电脑上先按 companion-memory 的 §11「电脑端（种子机）」把库落下来（`init` → `remote` → `push`/`pull`），再装插件。库不在，插件装上了也是「注入为空」——看起来像坏了，其实是没有数据。
+
+**② 安装：让 profile 认这个包**
+
+在本会话里（agent 工具）：
+
+```
+plugin_manager({ action: "install_bundle", target: "C:/Users/<你>/.../dsh-cm-core" })
+```
+
+或者走 CLI：
+
+```bash
+dsh --profile desktop plugin add github:SuYouRyo/dsh-cm-core
+```
+
+Windows 上 target 路径的写法有两条硬规矩：
+
+- **用绝对路径，别用 `~` 或相对路径**（`file:./dsh-cm-core` 会被解析到宿主进程的 cwd，不是你的终端 cwd）。
+- **正斜杠 `C:/a/b` 或双反斜杠 `C:\\a\\b`**。单反斜杠在 JSON 里是转义符，`"C:\Users"` 里的 `\U` 会直接把这段配置吃掉。
+
+装完 `install_bundle` 会返回 `application: restart-required`（`restartReason: no-hmr`）。**必须重启宿主进程**，profile 只在启动时应用一次。`dsh web` 重启后要 40–50 秒才打印 URL，别以为卡死。
+
+**③ 确认真的装上了**
+
+重启后看三处，缺一处就是没装上：
+
+```bash
+# a) profile 的依赖里有了它
+grep dsh-cm-core "%USERPROFILE%\.dsh\profiles\desktop\package.json"
+
+# b) bundles 末尾也被追加了（少了这条，包在 node_modules 但不会被加载）
+grep -A3 '"bundles"' "%USERPROFILE%\.dsh\profiles\desktop\package.json"
+```
+
+```
+c) 新开会话，system prompt 里应出现 [记忆库 · 现在记得的事] 段
+```
+
+`b)` 是最容易被忽略的一条：`install_bundle` 会同时写 dependencies 和 `dsh.profile.bundles`，但如果你手工改过 `package.json`，只补了前者，插件就静默不激活。
+
+**④ 立刻验一次注入（别等用着才发现是空的）**
+
+让 agent 调 `cm_status`：它应该报出库的绝对路径、当前角色、看得见哪几层、多少条原文/印象。三种结果分别意味着：
+
+| `cm_status` 返回 | 含义 | 下一步 |
+|---|---|---|
+| 库路径正确、条数非 0 | 装好了 | 完事 |
+| 报「库不存在 / 路径为空」 | 库没落下来，或不在工作区祖先链上 | 回 ①，或给 patch 里写死 `memDir` |
+| 工具根本不存在 | 插件没激活 | 回 ③ 查 bundles；再不行看宿主启动日志有没有 `did not activate` |
+
+`cm_status` 有路径和条数，但注入段仍然是空的话，那就是下面第八节的 Windows 路径 bug，不是配置问题。
+
+**⑤ 清掉 `AGENTS.md` 里的静态记忆段**
+
+如果这台机器以前用 `cm-agents.js` 往 `AGENTS.md` 写过 `<!-- CM:BEGIN -->` … `<!-- CM:END -->` 段，**装插件前必须把这一段删掉**。原因是 DSH 在首个请求时加载 `AGENTS.md`，插件每轮再注入一次——同一份记忆被渲染两遍，而且两边的角色口径会各自漂移（本项目历史上的污染事故就是这么来的）。
+
+删掉段之后 `AGENTS.md` 只剩手写区，插件注入照常工作。
+
+**⑥ 想「全丢可恢复」，还要自己补一份 snapshot**
+
+从 GitHub 装下来的包**不带** `snapshot/`（§六 说明了原因：里面是真实原文，不能公开）。所以插件能注入 / 摄入 / 检索，但 `cm_restore` 会明确告诉你「插件包里没有快照清单」。要启用恢复能力，在那台有完整原料的机器上跑一次 `node scripts/make-snapshot.mjs`，把生成物放进包里再装。
+
 ### 配置项（可选）
 
 不导出 `Config`（本包没有 `@deepseek-ai/schemastery` 依赖，Cordis 会对导出的 `Config` 调 `schema.validate()`，普通对象会直接崩在启动阶段）。
@@ -189,6 +264,28 @@ dsh-cm-core 自测：31 通过 / 0 失败 / 0 跳过     # 带 snapshot 的完�
 3. `ctx.tools` 直接读 → `cannot get property "tools" without inject`。
 4. 同步调 `registerTools` → 服务未就绪，工具**静默**不挂。
 5. 库目录落到 `~/.dsh/companion-memory` → 凭空造空库，注入永远为空。
+6. **Windows 上 `new URL(...).pathname` 拼出 `/C:/...` → 插件静默失效（0.1.4 及更早）**。详见下节。
+
+### Windows 专属：`new URL().pathname` 会拼出 `/C:/...`
+
+`lib/memory.js` 原来写 `require(VENDOR.pathname)`。Windows 上 `VENDOR.pathname` 是 `/C:/Users/...`，带前导斜杠，`require()` 直接抛 `MODULE_NOT_FOUND: Cannot find module '/C:/Users/.../vendor/index.js'`。而 `getMemory()` 里这段被 `try/catch` 包着，catch 后返回 `null` —— 于是**不报错、不告警**，`sectionText()` 恒返回空串，插件装上去一条记忆都不注入。Linux / macOS 上永远不会复现。
+
+同类问题散在四处，`lib/index.js` 的 `requireIngest` / `vendorModule`、`lib/restore.js` 的 `loadVendor` 也一样；测试里第 ⑲ 条还会因为裸 Windows 路径 `import('C:\...')` 报 `ERR_UNSUPPORTED_ESM_URL_SCHEME`，`cwd: '/'` 也不存在。
+
+修法（`495667f`，2026-11-28）：
+
+```js
+// 有 fileURLToPath 就用它
+import { fileURLToPath } from 'node:url'
+lib = require(fileURLToPath(VENDOR))
+
+// 只有 URL 的字符串形态时，剥掉 Windows 盘符前的那个斜杠
+req(new URL('../vendor/ingest.js', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'))
+```
+
+自测从 `13 通过 / 12 失败` 变成 `25 通过 / 0 失败 / 6 跳过`。**从 GitHub 装 0.1.4 的人会踩到这个**——它不是配置错，是代码在 Windows 上不工作。自己打一次上面这两处补丁，或换成本仓当前的 `master`。
+
+顺带一条：本机 `core.symlinks=false`（Windows 默认）时，仓库里若有 mode `120000` 的软链会落成「一行文本」的普通文件。本包没有软链，不受影响；companion-memory 的 `docs/` 那边中过招。
 
 ## 九、许可
 
